@@ -14,7 +14,7 @@ A crawler that crawls the latest articles about Trump from CNN.com and his lates
 ## Roadmap
 
 - [x] Project Start (13-04-2019 14:45 GMT)
-- [x] Crawl CNN.com
-- [ ] Crawl Twitter
+- [x] Crawl CNN.com (13-04-2019 15:40 GMT)
+- [x] Crawl Twitter (13-04-2019 18:55 GMT)
 - [ ] Build website
 - [ ] Data Analytics

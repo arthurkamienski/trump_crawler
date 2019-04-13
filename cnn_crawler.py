@@ -1,41 +1,31 @@
 import requests
 import json
-
-def get_key():
-    with open('cnn_api_key.txt', 'r') as key_file:
-        key = key_file.readline()
-    return key
+import api_keys
 
 def query_api(link):
     return requests.get(link).text
 
-def news_list(text):
+def news_list(text, number):
     news = json.loads(text)['articles']
 
     for article in news:
         del article['source']
         del article['content']
 
-    return news
+    return news[:number]
 
-def build_link(keyword='trump'):
+def build_link(keyword):
     return 'https://newsapi.org/v2/everything?' \
     f'q={keyword}&' \
     'sources=cnn&' \
     'sortBy=publishedAt&' \
-    'apiKey=' + get_key()
+    'apiKey=' + api_keys.news
 
-
-def main():
-    articles_num = 25
-
-    link = build_link()
+def get_news(number=25, keyword='trump'):
+    link = build_link(keyword)
 
     raw_text = query_api(link)
 
-    return news_list(raw_text)
+    return news_list(raw_text, number)
 
-if __name__ == '__main__':
-    lists = main()
-
-    print(lists[:25])
+print(get_news())
