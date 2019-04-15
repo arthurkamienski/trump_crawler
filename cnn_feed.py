@@ -3,27 +3,34 @@
 import requests
 import json
 import api_keys
+from datetime import datetime
 
+# query news api and return the content of the request
 def query_api(link):
     return requests.get(link).text
 
+# parse raw json data from the api and return a list of articles 
 def news_list(text):
     news = json.loads(text)['articles']
 
+    # unecessary information
     for article in news:
         del article['source']
-        del article['content']
 
     return news
 
+# build the link (string) to query the API based on a search keyword and number
+# of results
 def build_link(keyword, number):
     return 'https://newsapi.org/v2/everything?' \
     f'q={keyword}&' \
     'sources=cnn&' \
     'sortBy=publishedAt&' \
     f'pageSize={number}&' \
+    'language=en&' \
     'apiKey=' + api_keys.news
 
+# wraps the links building, api querying and parsing funcionts
 def get_news(number=25, keyword='trump'):
     link = build_link(keyword, number)
 
@@ -31,32 +38,79 @@ def get_news(number=25, keyword='trump'):
 
     return news_list(raw_text)
 
-def print_html():
+# calculates time difference between now and the time of the post
+# returns a string corresponding to the time difference truncated
+# to the greatest unit
+def time_diff(date):
+    diff = datetime.utcnow() - date
+    time = str(diff.days) + ' days ago'
 
-    news = get_news()
+    if diff.days == 1:
+        time = '1 day ago'
+    elif diff.days == 0:
+        hours = diff.seconds//3600
+        time = str(hours) + ' hours ago'
+        
+        if hours == 1:
+            time = '1 hour ago'
+        elif hours == 0:
+            minutes = diff.seconds//60
+            time = str(minutes) + ' minutes ago'
 
-    print("<div class='feed'>")
+            if minutes == 1:
+                time = '1 minute ago'
+            elif minutes == 0:
+                time = 'just now'
 
-    for n in news:
+    return time
+
+# turns the list of news into HTML code to be used on the webpage
+# each article is a cell div inside a wrapper feed div
+def print_html(news):
+
+    print("<div class='feed' id='cnn-feed'>")
+
+    for i, n in enumerate(news):
+        # for Javascript DOM
+        html_id = 'news' + str(i)
+
         url = n['url']
         image= n['urlToImage']
         title = n['title']
         author = n['author']
-        date = n['publishedAt']
+        content = n['content']
+        date = datetime.strptime(n['publishedAt'], '%Y-%m-%dT%H:%M:%SZ')
+
+
+        date = time_diff(date)
+
         text = n['description']
 
         print(f"""
-            <div class='cell' onclick="window.open('{url}');" style="cursor: pointer;">
+            <div class='cell' id='{html_id}'>
                 <div class='cell-img'>
-                    <img src="{image}">
+                    <a href="{url}" target='_blank' class='article-title'>
+                        <img src="{image}">
+                    </a>
                 </div>
                 <div class='cell-content'>
                     <div class='cell-header'>
-                        <b>{title}</b><br>
-                        {author} - {date}
+                        <a class='article-title' href="{url}" target='_blank'>
+                            <span class='headline'>{title}</span> <br>
+                            <span class='author'>{author}</span> <span class='time'>{date}</span>
+                        </a>
                     </div>
-                    <div class='cell-text'>
+                    <div class='cell-text' id='{html_id}-text'>
                         {text}
+                    </div>
+                    <div class='cell-info' id='{html_id}-info'>
+                        <a href="{url}" target='_blank'>
+                            Original Post
+                        </a> ||
+                        <span class='info-button' onclick="makediv('{html_id}', 'cnn');">Further Info</span>
+                    </div>
+                    <div id='{html_id}-additional' class='additional'>
+                        {content} <a href="{url}" target='_blank'>Read more on CNN...</a>
                     </div>
                 </div>
             </div>
@@ -65,4 +119,5 @@ def print_html():
     print("</div>")
 
 if __name__ == '__main__':
-    print_html()
+    news = get_news()
+    print_html(news)

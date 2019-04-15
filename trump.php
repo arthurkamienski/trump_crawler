@@ -28,20 +28,36 @@
     background: #555; 
 }
 
-.twitter-profile:visited, .twitter-profile:link {
+a:visited, a:link {
+	color: gray;
+	text-decoration: none;
+}
+
+.twitter-title:visited, .twitter-title:link, .article-title:visited, .article-title:link {
 	color: black;
 	font-weight: bold;
 	text-decoration: none;
-	z-index: 10
+}
+.twitter-title:hover, .article-title:hover {
+	opacity: 1.0;
 }
 
-.twitter-profile:hover {
+
+.screen-name, .author, .time {
+	color: gray;
+	font-weight: normal;
+}
+
+.time {
+	float: right;
+}
+
+.twitter-title:hover > .username, img:hover {
 	opacity: 0.5;
 }
 
-.username {
-	color: gray;
-	font-weight: normal;
+.article-title:hover > .headline, img:hover {
+	opacity: 0.5;
 }
 
 #main {
@@ -73,7 +89,6 @@ img {
 	display: table-cell;
 	vertical-align: top;
 	text-align: left;
-	display: table-cell;
 	width: 10%
 }
 
@@ -111,35 +126,290 @@ img {
     border-bottom-style: none;
 }
 
+.cell-info {
+    text-align: right;
+    color: grey;
+}
+
+#info-panel {
+    text-align: center;
+    display: none;
+    position: fixed;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+    background-color: ghostwhite;
+    width: 50%;
+    height: 90%;
+    z-index: 10;
+    overflow-y: auto;
+}
+
+#close-button {
+    position: absolute;
+    top: 1%;
+    right: 1%;
+    cursor: pointer;
+    font-size: 25px;
+    float:right;
+}
+
+.related-rate {
+	float: left;
+	color: red;
+}
+
+.info-button {
+	cursor: pointer;
+}
+
+#close-button:hover, #related-tweets:hover, #related-articles:hover, .info-button:hover, a:hover {
+    opacity: 0.5;
+}
+
+#related-tweets, #related-articles {
+	cursor: pointer;
+}
+
+#panel-header {
+    width: 100%;
+    height: 7%;
+    padding-right: 1%;
+    text-align: center;
+}
+
+#panel-content, #panel-related, #panel-additional {
+    text-align: center;
+    width: 95%;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+    border-bottom-style: solid;
+    border-color: lightgrey;
+    border-width: 2px;
+    padding-bottom: 10px;
+}
+
+.additional {
+	display: none;
+}
+
 </style>
 </head>
 <body>
-    <?php include '/var/www/html/header.php'; ?>
-	<center>
-		<div id="main">
-			<h1 class="w3-xlarge">TRUMP FEED</h1>
-			<div id='twitter'>
-				<h2 class="w3-xlarge">TWEETS</h2>
-                <?php
-                    putenv("PYTHONIOENCODING=utf-8");
+	<div id='info-panel'>
+	    <div id='panel-header'>
+	        <h1 class="w3-large">FURTHER INFO</h1>
+	        <span id='close-button' onclick='hidediv()'>&#10006;</span>
+	    </div> 
+	    <div id='panel-content'>
+	        
+	    </div>
+	    <h1 class="w3-large">MORE INFO</h1>
+	    <div id='panel-additional'>
+	    	
+	    </div>
 
-                    $command = escapeshellcmd('/var/www/html/trump_feed_files/twitter_feed.py');
+	    <h1 class="w3-large">
+	    	RELATED 
+	    	<span id='related-tweets' onclick="switch_feed()">TWEETS</span>
+	    	<span id='related-articles' onclick="switch_feed()">ARTICLES</span>
+	    </h1>
+	    <div id='panel-related'>
+	    
+	    </div>
+	</div>
 
-                    $output = shell_exec($command);
-                    echo $output;
-                ?>
+	<div id='dimmer'>
+	    <?php include '/var/www/html/header.php'; ?>
+		<center>
+			<div id="main">
+				<h1 class="w3-xlarge">TRUMP FEED</h1>
+				<div id='twitter'>
+					<h2 class="w3-xlarge">TWEETS</h2>
+	                <?php
+	                    putenv("PYTHONIOENCODING=utf-8");
+
+	                    $command = escapeshellcmd('/var/www/html/trump_feed_files/twitter_feed.py');
+
+	                    $output = shell_exec($command);
+	                    echo $output;
+	                ?>
+				</div>
+				<div id='cnn'>
+					<h2 class="w3-xlarge">CNN NEWS</h2>
+	                <?php
+	                    $command = escapeshellcmd('/var/www/html/trump_feed_files/cnn_feed.py');
+
+	                    $output = shell_exec($command);
+	                    echo $output;
+	                ?>
+				</div>
 			</div>
-			<div id='cnn'>
-				<h2 class="w3-xlarge">CNN NEWS</h2>
-                <?php
-                    $command = escapeshellcmd('/var/www/html/trump_feed_files/cnn_feed.py');
+		</center>
+	    <?php include '/var/www/html/footer.php'; ?>
+	</div>
 
-                    $output = shell_exec($command);
-                    echo $output;
-                ?>
-			</div>
-		</div>
-	</center>
-    <?php include '/var/www/html/footer.php'; ?>
+	<script type="text/javascript">
+        
+        var panel = document.getElementById('info-panel');
+        var content = document.getElementById('panel-content');
+        var related = document.getElementById('panel-related');
+        var additional = document.getElementById('panel-additional');
+        var twitter = document.getElementById('twitter-feed');
+        var cnn = document.getElementById('cnn-feed');
+        var dimmer = document.getElementById('dimmer');
+
+        var curr_cell = null;
+        var feed = null;
+
+        function makediv(name, source) {
+        	panel.scrollTop = 0;
+        	curr_cell = name;
+
+            panel.style.display = 'block';
+
+            dimmer.style.opacity = '0.5';
+            dimmer.style.pointerEvents = 'none';
+            dimmer.style.overflowY = 'hidden';
+
+            content.innerHTML = document.getElementById(name).outerHTML;
+            additional.innerHTML = document.getElementById(name+'-additional').innerHTML;
+
+            if (source == 'twitter') {
+            	feed = twitter;
+            } else {
+            	feed = cnn;
+            }
+
+            switch_feed();
+        }
+
+        function trigrams(text) {
+            var words = new Set()
+
+            for (var i = 0; i < text.length-2; i++) {
+                words.add(text.substring(i, i+3))
+            }
+
+            return words
+        }
+
+        function make_related_to() {
+        	var text = document.getElementById(curr_cell+'-text').innerHTML
+
+            var related_list = [];
+
+            var text_trigrams = trigrams(text);
+
+            for (var i = 0; i < feed.childNodes.length; i++) {
+
+                node = feed.childNodes[i];
+
+                if (node.className == 'cell') {
+                    
+                    node_text = document.getElementById(node.id+'-text').innerHTML;
+
+                    node_trigrams = trigrams(node_text);
+
+                    var similarity = intersect(node_trigrams, text_trigrams)/union(node_trigrams, text_trigrams);
+
+                    if (similarity != 1) {
+                    	related_list.push([similarity, node.cloneNode(true)]);
+                    }
+                }
+
+            }
+
+            related_list.sort(function(a,b){return b[0] - a[0];});
+
+            var cells = [];
+
+            for (var r of related_list.slice(0, 5)) {
+            	var sim = r[0];
+            	var cell = r[1];
+
+            	var info = cell.querySelector(".cell-info");
+
+
+            	if (sim < 0.15) {
+            		info.innerHTML = "<span class='related-rate'>Not so related</span>" + info.innerHTML;
+            	} else if (sim < 0.20) {
+            		info.innerHTML = "<span class='related-rate'>Possibly Related</span>" + info.innerHTML;
+            	}  else {
+            		info.innerHTML = "<span class='related-rate'>Related</span>" + info.innerHTML;
+            	}
+
+            	info = document.getElementById(cell.id + '-info');
+
+            	cells.push(cell.outerHTML);
+            }
+
+            related.innerHTML = cells
+        }
+
+        function union(setA, setB) {
+            var u = new Set(setA);
+            for (var elem of setB) {
+                u.add(elem);
+            }
+
+            return u.size;
+        }
+
+        function intersect(setA, setB) {
+            var i = new Set();
+            for (var elem of setB) {
+                if (setA.has(elem)) {
+                    i.add(elem);
+                }
+            }
+
+            return i.size;
+        }
+
+        function hidediv() {
+            panel.style.display = 'none';
+            dimmer.style.opacity = '1.0';
+            dimmer.style.pointerEvents = 'auto';
+            dimmer.style.overflowY = 'auto';
+        }
+
+        document.addEventListener("keydown", keyPress, false);
+
+        function keyPress (e) {
+		    if(e.key === "Escape") {
+		        hidediv();
+		    }
+		}
+
+		function switch_feed() {
+			console.log(feed)
+			var articles = document.getElementById('related-articles');
+			var tweets = document.getElementById('related-tweets');
+
+			if(feed === twitter) {
+
+				tweets.style.fontWeight = 'normal';
+				tweets.style.color = 'lightgrey';
+				
+				articles.style.fontWeight = 'bold'
+				articles.style.color = 'black';
+
+				feed = cnn;
+				make_related_to();
+			} else {
+				tweets.style.fontWeight = 'bold';
+				tweets.style.color = 'black';
+
+				articles.style.fontWeight = 'normal'
+				articles.style.color = 'lightgrey';
+				feed = twitter;
+				make_related_to();
+			}
+		}
+
+    </script>
+
 </body>
 </html>
