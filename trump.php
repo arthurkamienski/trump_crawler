@@ -156,7 +156,7 @@ img {
 
 .related-rate {
 	float: left;
-	color: red;
+	opacity: 0.7;
 }
 
 .info-button {
@@ -251,7 +251,7 @@ img {
 	</div>
 
 	<script type="text/javascript">
-        
+        // global vars (DOMs)
         var panel = document.getElementById('info-panel');
         var content = document.getElementById('panel-content');
         var related = document.getElementById('panel-related');
@@ -260,9 +260,11 @@ img {
         var cnn = document.getElementById('cnn-feed');
         var dimmer = document.getElementById('dimmer');
 
+        // For panel switching
         var curr_cell = null;
         var feed = null;
 
+        // show the panel div
         function makediv(name, source) {
         	panel.scrollTop = 0;
         	curr_cell = name;
@@ -285,6 +287,7 @@ img {
             switch_feed();
         }
 
+        // generate trigrams (3-char strings)
         function trigrams(text) {
             var words = new Set()
 
@@ -295,6 +298,7 @@ img {
             return words
         }
 
+        // build the related section of the panel
         function make_related_to() {
         	var text = document.getElementById(curr_cell+'-text').innerHTML
 
@@ -312,6 +316,7 @@ img {
 
                     node_trigrams = trigrams(node_text);
 
+                    // Jaccard similarity
                     var similarity = intersect(node_trigrams, text_trigrams)/union(node_trigrams, text_trigrams);
 
                     if (similarity != 1) {
@@ -321,6 +326,7 @@ img {
 
             }
 
+            // sort by similarity
             related_list.sort(function(a,b){return b[0] - a[0];});
 
             var cells = [];
@@ -332,12 +338,13 @@ img {
             	var info = cell.querySelector(".cell-info");
 
 
-            	if (sim < 0.15) {
-            		info.innerHTML = "<span class='related-rate'>Not so related</span>" + info.innerHTML;
-            	} else if (sim < 0.20) {
-            		info.innerHTML = "<span class='related-rate'>Possibly Related</span>" + info.innerHTML;
+            	// related rating formatting
+            	if (sim < 0.1) {
+            		info.innerHTML = "<span class='related-rate' style='color:red;'>Possibly not related</span>" + info.innerHTML;
+            	} else if (sim < 0.15) {
+            		info.innerHTML = "<span class='related-rate' style='color:orange;'>Not so related</span>" + info.innerHTML;
             	}  else {
-            		info.innerHTML = "<span class='related-rate'>Related</span>" + info.innerHTML;
+            		info.innerHTML = "<span class='related-rate' style='color:green;'>Possibly Related</span>" + info.innerHTML;
             	}
 
             	info = document.getElementById(cell.id + '-info');
@@ -348,6 +355,7 @@ img {
             related.innerHTML = cells
         }
 
+        // helper functions for jaccard similarity
         function union(setA, setB) {
             var u = new Set(setA);
             for (var elem of setB) {
@@ -368,6 +376,7 @@ img {
             return i.size;
         }
 
+        // hide panel after close event
         function hidediv() {
             panel.style.display = 'none';
             dimmer.style.opacity = '1.0';
@@ -375,6 +384,7 @@ img {
             dimmer.style.overflowY = 'auto';
         }
 
+        // close panel on ESC
         document.addEventListener("keydown", keyPress, false);
 
         function keyPress (e) {
@@ -383,8 +393,8 @@ img {
 		    }
 		}
 
+		// switch related feed from news to tweets and vice-versa
 		function switch_feed() {
-			console.log(feed)
 			var articles = document.getElementById('related-articles');
 			var tweets = document.getElementById('related-tweets');
 
