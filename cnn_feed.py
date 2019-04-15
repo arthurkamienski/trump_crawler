@@ -4,7 +4,6 @@ import requests
 import json
 import api_keys
 from datetime import datetime
-import matplotlib.pyplot as plt
 
 # query news api and return the content of the request
 def query_api(link):

@@ -98,7 +98,7 @@ def make_tweet_html(tweet, html_id):
         
         retweet = f"""
             <b> (Retweeted from 
-            <a class='twitter-profile' href='https://twitter.com/{tweet.retweeted_status.user.screen_name}' target="_blank">
+            <a class="twitter-profile" href="https://twitter.com/{tweet.retweeted_status.user.screen_name}" target="_blank">
                 @{tweet.retweeted_status.user.screen_name}
             </a>)</b>
         """
@@ -119,8 +119,9 @@ def make_tweet_html(tweet, html_id):
                 <div class='cell-content'>
                     <div class='cell-header'>
                         <a class='twitter-title' href="https://twitter.com/{tweet.user.screen_name}" target="_blank">
-                            <span class='username'>{tweet.user.name}</span> <span class='screen-name'>@{tweet.user.screen_name}</span> {retweet}<span class='time'>{time} </span>
-                        </a>
+                            <span class='username'>{tweet.user.name}</span> <span class='screen-name'>@{tweet.user.screen_name}</span> <span class='time'>{time}</span>
+                        </a><br>
+                        {retweet}
                     </div>  
                     <div class='cell-text' id='{html_id}-text'>
                         {text}
